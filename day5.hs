@@ -1,4 +1,5 @@
 import TestUtils
+import Data.List (partition)
 
 middle :: [a] -> a
 middle l@(_:_:_) = middle $ tail $ init l
@@ -23,8 +24,20 @@ isValidOrder :: [(Int, Int)] -> [Int] -> Bool
 isValidOrder rules update =
     all (checkPageAgainstRules rules update) [1..(length update - 1)]
 
-passingUpdates :: [(Int, Int)] -> [[Int]] -> [[Int]]
-passingUpdates rules updates = filter (isValidOrder rules) updates
+reorderUpdate :: [(Int, Int)] -> [Int] -> [Int]
+reorderUpdate rules update = reorder update 1
+  where
+    reorder current index
+      | index >= length current = current
+      | checkPageAgainstRules rules current index = reorder current (index + 1)
+      | otherwise = reorder (swapLeft current index) 1
+
+    swapLeft xs i =
+      let (before, x:y:after) = splitAt (i-1) xs
+      in before ++ (y:x:after)
+
+partitionUpdates :: [(Int, Int)] -> [[Int]] -> ([[Int]], [[Int]])
+partitionUpdates rules = partition (isValidOrder rules)
 
 parseRule :: String -> (Int, Int)
 parseRule line =
@@ -48,9 +61,14 @@ main :: IO ()
 main = do
     rules <- readRulesFromFile "day5rules.txt"
     updates <- readUpdatesFromFile "day5updates.txt"
-    let validUpdates = passingUpdates rules updates
-    let middleNumbers = map middle validUpdates
-    print $ sum middleNumbers
+    let (valid, invalid) = partitionUpdates rules updates
+    let middlePart1 = map middle valid
+    print "Part 1:"
+    print $ sum middlePart1
+    let reorderedUpdates = map (reorderUpdate rules) invalid
+    let middlePart2 = map middle reorderedUpdates
+    print "Part 2:"
+    print $ sum middlePart2
 
 orderTests :: [TestCase Bool]
 orderTests = [
@@ -93,4 +111,23 @@ orderTests = [
     TestCase "Multiple dependencies on same number, invalid"
         False
         (isValidOrder [(1,3), (2,3)] [3,1,2])
+    ]
+
+reorderTests :: [TestCase [Int]]
+reorderTests = [
+    TestCase "Simple swap needed"
+    [1,2]
+    (reorderUpdate [(1,2)] [2,1]),
+
+    TestCase "Multiple swaps needed"
+    [1,2,3]
+    (reorderUpdate [(1,2), (2,3)] [3,2,1]),
+
+    TestCase "Already valid order"
+    [1,2,3]
+    (reorderUpdate [(1,2), (2,3)] [1,2,3]),
+
+    TestCase "Multiple rules for same number"
+    [1,2,3]
+    (reorderUpdate [(1,2), (1,3)] [2,3,1])
     ]
