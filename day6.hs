@@ -16,6 +16,9 @@ main = do
     let uniqueLocations = Set.fromList positions :: Set.Set Position
     print "Part 1:"
     print $ length uniqueLocations
+    let possibleLoopPositions = findLoopPositions grid guardLocation $ path pathResult
+    print "Part 2:"
+    print $ length possibleLoopPositions
 
 obsLocation :: [String] -> [Position] -> Maybe Position
 obsLocation grid = find (\pos -> getAtLocation grid pos == '#')
