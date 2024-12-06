@@ -1,8 +1,9 @@
-import Grid (Direction, getDirectionalPositions, getCharacterLocations, getAtLocation, orthogonalDirections)
+import Grid (Direction (UP), getDirectionalPositions, getCharacterLocations, getAtLocation, orthogonalDirections, Position, DirectedPosition, dirOffset, isValidPosition, getPositionsFromPath, visualizePath)
 import Data.List (find)
 import Debug.Trace (trace)
 import qualified Data.Set as Set
 import Util (dropLast)
+import TestUtils
 
 main :: IO ()
 main = do
@@ -10,26 +11,90 @@ main = do
     let grid = lines map
     let guardLocation = head $ getCharacterLocations grid '^'
     let obstacleLocations = getCharacterLocations grid '#'
-    let path = followGuardPath grid obstacleLocations guardLocation
-    let uniqueLocations = Set.fromList path :: Set.Set (Int, Int)
+    let pathResult = followGuardPath grid guardLocation
+    let positions = getPositionsFromPath $ path pathResult
+    let uniqueLocations = Set.fromList positions :: Set.Set Position
     print "Part 1:"
     print $ length uniqueLocations
 
-obsLocation :: [String] -> [(Int, Int)] -> Maybe (Int, Int)
+obsLocation :: [String] -> [Position] -> Maybe Position
 obsLocation grid = find (\pos -> getAtLocation grid pos == '#')
 
-followGuardPath :: [String] -> [(Int, Int)] -> (Int, Int) -> [(Int, Int)]
-followGuardPath grid obstacles startPos = move startPos (cycle orthogonalDirections) []
+data PathResult = PathResult {
+    path :: [DirectedPosition],
+    foundLoop :: Bool
+} deriving (Show)
+
+followGuardPath :: [String] -> Position -> PathResult
+followGuardPath grid startPos = move startPos (cycle orthogonalDirections) [] Set.empty
   where
-    move pos (dir:restDirs) acc = 
-      trace ("Current pos: " ++ show pos ++ "\nDirection: " ++ show dir) $
-      let positions = trace ("Generated positions: " ++ show positions) $ 
-                     getDirectionalPositions grid pos dir
-      in case obsLocation grid positions of
-           Nothing -> trace "No obstacle found, returning all positions" $ acc ++ positions
-           Just obstacle -> 
-             let path = dropLast $ takeWhile (/= obstacle) positions
-                 newPos = if null path then pos else last path
-             in trace ("Obstacle found at: " ++ show obstacle ++ "\nPath to obstacle: " ++ show path ++ 
-                      "\nNew position: " ++ show newPos) $
-                move newPos restDirs (acc ++ path)
+    move pos (dir:restDirs) acc seen
+      | Set.member (pos, dir) seen = PathResult acc True  -- Found a loop
+      | otherwise = 
+          let positions = pos : getDirectionalPositions grid pos dir
+              directedPositions = map (, dir) positions
+              obstaclePos = find (\p -> getAtLocation grid p == '#') positions
+              newSeen = Set.insert (pos, dir) seen
+          in case obstaclePos of
+            Nothing -> PathResult (acc ++ directedPositions) False
+            Just obstacle ->
+              let path = takeWhile (/= obstacle) positions
+                  directedPath = map (, dir) path
+                  newPos = if null path then pos else last path
+              in move newPos restDirs (acc ++ directedPath) newSeen
+
+
+hasLoop :: [DirectedPosition] -> Bool
+hasLoop path = 
+    let uniqueStates = Set.fromList path
+    in length uniqueStates < length path
+
+-- Add an obstacle to the grid at the given position
+addObstacle :: [String] -> Position -> [String]
+addObstacle grid (x, y) =
+    let (before, row:after) = splitAt y grid
+        (beforeCol, _:afterCol) = splitAt x row
+        newRow = beforeCol ++ "#" ++ afterCol
+    in before ++ [newRow] ++ after
+
+findLoopPositions :: [String] -> Position -> [DirectedPosition] -> [Position]
+findLoopPositions grid startPos guardPath =
+        let pathPositions = Set.fromList $ getPositionsFromPath guardPath
+            isLoopPosition pos =
+                pos `Set.member` pathPositions &&  -- Only test positions on the path
+                let modifiedGrid = addObstacle grid pos
+                    newPath = path $ followGuardPath modifiedGrid startPos
+                in hasLoop newPath
+    in filter isLoopPosition (Set.toList pathPositions)
+
+loopGrid :: [String]
+loopGrid = [
+    ".#...",
+    ".^..#",  -- Should loop
+    ".....",
+    ".....",
+    "#..#."
+    ]
+
+noLoopGrid :: [String]
+noLoopGrid = [
+    ".#...",
+    ".^..#",  -- Guard starts up but blocked on three sides
+    ".....",
+    ".....",
+    "#...."
+    ]
+
+guardLoopTests :: [TestCase Bool]
+guardLoopTests = [
+    TestCase {
+        testName = "Loop",
+        expected = True,
+        actual = foundLoop $ followGuardPath loopGrid (1,1)
+    },
+    TestCase {
+        testName = "No Loop",
+        expected = False,
+        actual = foundLoop $ followGuardPath loopGrid (1,1)
+    }
+    ]
