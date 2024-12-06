@@ -2,9 +2,9 @@
 -- Takes a list of strings and uses those as a grid
 module Grid where
 
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe)
 
-data Direction = UP | UP_RIGHT | RIGHT | DOWN_RIGHT | DOWN | DOWN_LEFT | LEFT | UP_LEFT deriving (Eq,Ord,Enum)
+data Direction = UP | UP_RIGHT | RIGHT | DOWN_RIGHT | DOWN | DOWN_LEFT | LEFT | UP_LEFT deriving (Eq,Ord,Enum,Show)
 
 orthogonalDirections :: [Direction]
 orthogonalDirections =  [UP, RIGHT, DOWN, LEFT]
@@ -41,6 +41,10 @@ getDirectionSequence grid (x, y) (dx, dy) count =
         then Just positions
         else Nothing
 
+getDirectionSequenceUntilBoundary :: [String] -> (Int, Int) -> (Int, Int) -> [(Int, Int)]
+getDirectionSequenceUntilBoundary grid (x, y) (dx, dy) =
+    takeWhile (isValidPosition grid) [(x + i*dx, y + i*dy) | i <- [1..]]
+
 getAdjacentPositions :: [String] -> (Int, Int) -> Int -> [[(Int, Int)]]
 getAdjacentPositions grid pos count =
     getOrthogonalPositions grid pos count ++ getDiagonalPositions grid pos count
@@ -57,14 +61,9 @@ getDiagonalPositions grid (x, y) count =
         sequences = map (\offset -> getDirectionSequence grid (x, y) offset count) offsets
     in catMaybes sequences
 
-getDirectionalPositions :: [String] -> (Int, Int) -> Direction -> [[(Int, Int)]]
-getDirectionalPositions grid (x, y) dir = 
-    let offset = dirOffset dir
-        maxDist = uncurry max (gridDimensions grid)
-        sequence = getDirectionSequence grid (x, y) offset maxDist
-    in case sequence of
-         Nothing -> []
-         Just positions -> [positions]
+getDirectionalPositions :: [String] -> (Int, Int) -> Direction -> [(Int, Int)]
+getDirectionalPositions grid (x, y) dir =
+    getDirectionSequenceUntilBoundary grid (x, y) (dirOffset dir)
 
 getCenterPositions :: [String] -> [(Int, Int)]
 getCenterPositions grid =
@@ -81,3 +80,10 @@ getCharacterLocations grid targetChar =
 -- Manhattan distance (movement only up/down/left/right)
 getManhattanDistance :: (Int, Int) -> (Int, Int) -> Int
 getManhattanDistance    (x1, y1) (x2, y2) = abs (x2 - x1) + abs (y2 - y1)
+
+getPathBetween :: (Int, Int) -> (Int, Int) -> [(Int, Int)]
+getPathBetween    (x1, y1) (x2, y2) =
+   let dx = signum (x2 - x1)
+       dy = signum (y2 - y1)
+       path = takeWhile (/= (x2 + dx, y2 + dy)) $ iterate (\(x,y) -> (x + dx, y + dy)) (x1, y1)
+   in path

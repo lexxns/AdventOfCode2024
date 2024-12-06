@@ -1,5 +1,8 @@
-import Grid (Direction, getDirectionalPositions, getCharacterLocations, getAtLocation)
+import Grid (Direction, getDirectionalPositions, getCharacterLocations, getAtLocation, orthogonalDirections)
 import Data.List (find)
+import Debug.Trace (trace)
+import qualified Data.Set as Set
+import Util (dropLast)
 
 main :: IO ()
 main = do
@@ -7,12 +10,26 @@ main = do
     let grid = lines map
     let guardLocation = head $ getCharacterLocations grid '^'
     let obstacleLocations = getCharacterLocations grid '#'
-    print "hi"
+    let path = followGuardPath grid obstacleLocations guardLocation
+    let uniqueLocations = Set.fromList path :: Set.Set (Int, Int)
+    print "Part 1:"
+    print $ length uniqueLocations
 
-obstacleInPath :: [String] -> (Int, Int) -> [(Int, Int)] -> Direction -> Maybe (Int, Int)
-obstacleInPath grid loc obstacles dir = 
-    case getDirectionalPositions grid loc dir of
-        [] -> Nothing
-        (positions:_) -> findFirstObstacle positions
-    where
-        findFirstObstacle = find (\pos -> getAtLocation grid pos == '#')
+obsLocation :: [String] -> [(Int, Int)] -> Maybe (Int, Int)
+obsLocation grid = find (\pos -> getAtLocation grid pos == '#')
+
+followGuardPath :: [String] -> [(Int, Int)] -> (Int, Int) -> [(Int, Int)]
+followGuardPath grid obstacles startPos = move startPos (cycle orthogonalDirections) []
+  where
+    move pos (dir:restDirs) acc = 
+      trace ("Current pos: " ++ show pos ++ "\nDirection: " ++ show dir) $
+      let positions = trace ("Generated positions: " ++ show positions) $ 
+                     getDirectionalPositions grid pos dir
+      in case obsLocation grid positions of
+           Nothing -> trace "No obstacle found, returning all positions" $ acc ++ positions
+           Just obstacle -> 
+             let path = dropLast $ takeWhile (/= obstacle) positions
+                 newPos = if null path then pos else last path
+             in trace ("Obstacle found at: " ++ show obstacle ++ "\nPath to obstacle: " ++ show path ++ 
+                      "\nNew position: " ++ show newPos) $
+                move newPos restDirs (acc ++ path)
