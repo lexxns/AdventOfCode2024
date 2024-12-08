@@ -7,7 +7,9 @@ import qualified Data.Set as Set
 
 data Direction = UP | UP_RIGHT | RIGHT | DOWN_RIGHT | DOWN | DOWN_LEFT | LEFT | UP_LEFT deriving (Eq,Ord,Enum,Show)
 
+type Grid = [String]
 type Position = (Int, Int)
+type Vector = (Int, Int)
 type DirectedPosition = (Position, Direction)
 
 orthogonalDirections :: [Direction]
@@ -26,55 +28,65 @@ dirOffset DOWN_LEFT     = (-1,    1)
 dirOffset LEFT          = (-1,    0)
 dirOffset UP_LEFT       = (-1,   -1)
 
-gridDimensions :: [String] -> Position
+gridDimensions :: Grid -> Position
 gridDimensions grid = (length (head grid), length grid)
 
 -- Get character at location
-getAtLocation :: [String] -> Position -> Char
+getAtLocation :: Grid -> Position -> Char
 getAtLocation grid (x, y) = (grid !! y) !! x
 
-isValidPosition :: [String] -> Position -> Bool
+setAtLocation :: Grid -> Position -> Char -> Grid
+setAtLocation grid (x, y) ch = 
+    let row = grid !! y
+        newRow = take x row ++ [ch] ++ drop (x + 1) row
+    in take y grid ++ [newRow] ++ drop (y + 1) grid
+
+setAtLocations :: Grid -> [Position] -> Char -> Grid
+setAtLocations grid positions ch = 
+    foldl (\g pos -> setAtLocation g pos ch) grid positions
+
+isValidPosition :: Grid -> Position -> Bool
 isValidPosition grid (x, y) =
     let (width, height) = gridDimensions grid
     in x >= 0 && x < width && y >= 0 && y < height
 
-getDirectionSequence :: [String] -> Position -> Position -> Int -> Maybe [Position]
+getDirectionSequence :: Grid -> Position -> Position -> Int -> Maybe [Position]
 getDirectionSequence grid (x, y) (dx, dy) count =
     let positions = take count [(x + i*dx, y + i*dy) | i <- [1..]]
     in if all (isValidPosition grid) positions
         then Just positions
         else Nothing
 
-getDirectionSequenceUntilBoundary :: [String] -> Position -> Position -> [Position]
+getDirectionSequenceUntilBoundary :: Grid -> Position -> Position -> [Position]
 getDirectionSequenceUntilBoundary grid (x, y) (dx, dy) =
     takeWhile (isValidPosition grid) [(x + i*dx, y + i*dy) | i <- [1..]]
 
-getAdjacentPositions :: [String] -> Position -> Int -> [[Position]]
+getAdjacentPositions :: Grid -> Position -> Int -> [[Position]]
 getAdjacentPositions grid pos count =
     getOrthogonalPositions grid pos count ++ getDiagonalPositions grid pos count
 
-getOrthogonalPositions :: [String] -> Position -> Int -> [[Position]]
+getOrthogonalPositions :: Grid -> Position -> Int -> [[Position]]
 getOrthogonalPositions grid (x, y) count =
     let offsets = map dirOffset orthogonalDirections
         sequences = map (\offset -> getDirectionSequence grid (x, y) offset count) offsets
     in catMaybes sequences
 
-getDiagonalPositions :: [String] -> Position -> Int -> [[Position]]
+getDiagonalPositions :: Grid -> Position -> Int -> [[Position]]
 getDiagonalPositions grid (x, y) count =
     let offsets = map dirOffset diagonalDirections
         sequences = map (\offset -> getDirectionSequence grid (x, y) offset count) offsets
     in catMaybes sequences
 
-getDirectionalPositions :: [String] -> Position -> Direction -> [Position]
+getDirectionalPositions :: Grid -> Position -> Direction -> [Position]
 getDirectionalPositions grid (x, y) dir =
     getDirectionSequenceUntilBoundary grid (x, y) (dirOffset dir)
 
-getCenterPositions :: [String] -> [Position]
+getCenterPositions :: Grid -> [Position]
 getCenterPositions grid =
     let (width, height) = gridDimensions grid
     in [(x,y) | x <- [1..width-2], y <- [1..height-2]]
 
-getCharacterLocations :: [String] -> Char -> [Position]
+getCharacterLocations :: Grid -> Char -> [Position]
 getCharacterLocations grid targetChar =
     [(x, y) | y <- [0..height-1],
               x <- [0..width-1],
@@ -84,6 +96,12 @@ getCharacterLocations grid targetChar =
 -- Manhattan distance (movement only up/down/left/right)
 getManhattanDistance :: Position -> Position -> Int
 getManhattanDistance    (x1, y1) (x2, y2) = abs (x2 - x1) + abs (y2 - y1)
+
+getVectorBetween :: Position -> Position -> Vector
+getVectorBetween    (x1, y1) (x2, y2) = (x2 - x1, y2 - y1)
+
+addVectorToPoint :: Position -> Vector -> Position
+addVectorToPoint    (x1, y1) (d1, d2) = (x1 + d1, y1 + d2)
 
 getPathBetween :: Position -> Position -> [Position]
 getPathBetween    (x1, y1) (x2, y2) =
@@ -95,7 +113,7 @@ getPathBetween    (x1, y1) (x2, y2) =
 getPositionsFromPath :: [DirectedPosition] -> [Position]
 getPositionsFromPath = map fst
 
-visualizePath :: [String] -> [Position] -> IO ()
+visualizePath :: Grid -> [Position] -> IO ()
 visualizePath grid positions = do
     let posSet = Set.fromList positions
         visual = [[if (x, y) `Set.member` posSet then '*' else c
@@ -103,7 +121,7 @@ visualizePath grid positions = do
                  | (y, row) <- zip [0..] grid]
     mapM_ putStrLn visual
 
-visualizeDirectedPath :: [String] -> [DirectedPosition] -> IO ()
+visualizeDirectedPath :: Grid -> [DirectedPosition] -> IO ()
 visualizeDirectedPath grid positions = do
     let dirToArrow UP = "^"
         dirToArrow RIGHT = ">"
@@ -116,3 +134,6 @@ visualizeDirectedPath grid positions = do
                          | (x, c) <- zip [0..] row]
                 | (y, row) <- zip [0..] grid]
     mapM_ putStrLn visual
+
+visualizeGrid :: Grid -> IO ()
+visualizeGrid = mapM_ putStrLn
