@@ -4,17 +4,27 @@ import Data.Char (digitToInt)
 import Data.List (sortBy, minimumBy, maximumBy)
 
 data Block = Block {
-    position :: Int,    
+    position :: Int,
     value :: Int
 } deriving (Show, Eq)
 
 type DiskMap = [Block]
 
+main :: IO ()
+main = do
+    input <- readFile "day9.txt"
+    let answer = calculateChecksum $ moveNumbers $ parseDiskMap input
+    print answer
+
+calculateChecksum :: DiskMap -> Integer
+calculateChecksum diskMap =
+    sum [fromIntegral (position block) * fromIntegral (value block) | block <- diskMap]
+
 parseDiskMap :: String -> DiskMap
-parseDiskMap = go 0 0
+parseDiskMap = parse 0 0
   where
-    go _ _ [] = []
-    go blockId pos (f:s:rest) =
+    parse _ _ [] = []
+    parse blockId pos (f:s:rest) =
         let fileLen = digitToInt f
             spaceLen = digitToInt s
             -- Create blocks with consecutive positions
@@ -23,8 +33,8 @@ parseDiskMap = go 0 0
                 value = blockId
             } | i <- [0..fileLen-1]]
             nextPos = pos + fileLen + spaceLen  -- Adjust next position
-        in fileBlocks ++ go (blockId + 1) nextPos rest
-    go blockId pos [f] =
+        in fileBlocks ++ parse (blockId + 1) nextPos rest
+    parse blockId pos [f] =
         let fileLen = digitToInt f
         in [Block {
             position = pos + i,
@@ -75,11 +85,11 @@ canMoveLeft diskMap block =
 
 -- Make all possible moves
 moveNumbers :: DiskMap -> DiskMap
-moveNumbers diskMap = go diskMap
+moveNumbers = mv
   where
-    go currentMap = case findNextMove currentMap of
+    mv currentMap = case findNextMove currentMap of
         Nothing -> currentMap
-        Just (block, newPos) -> go (moveBlock block newPos currentMap)
+        Just (block, newPos) -> mv (moveBlock block newPos currentMap)
 
 -- Convert DiskMap to string representation
 diskMapToString :: DiskMap -> String
@@ -88,7 +98,7 @@ diskMapToString blocks =
                 then 0
                 else maximum (map position blocks)
         emptyString = replicate (maxPos + 1) '.'
-    in foldr (\block str -> 
+    in foldr (\block str ->
         let (before, _:after) = splitAt (position block) str
         in before ++ show (value block) ++ after) emptyString blocks
 
@@ -106,7 +116,6 @@ diskMapParsing = [
         actual = diskMapToString $ parseDiskMap "2333133121414131402"
     }
     ]
-
 -- Test cases for reordering
 reordering :: [TestCase String]
 reordering = [
@@ -124,5 +133,20 @@ reordering = [
         testName = "Double Digits: 233313312141413140255",
         expected = "00101010111101092988333844855557666677",
         actual = diskMapToString $ moveNumbers $ parseDiskMap "233313312141413140255"
+    }
+    ]
+
+-- Test cases for checksum
+checksum :: [TestCase Integer]
+checksum = [
+    TestCase {
+        testName = "Simple checksum: 12345",
+        expected = 60,
+        actual = calculateChecksum $ moveNumbers $ parseDiskMap "12345"
+    },
+    TestCase {
+        testName = "Complex checksum: 2333133121414131402",
+        expected = 1928,
+        actual = calculateChecksum $ moveNumbers $ parseDiskMap "2333133121414131402"
     }
     ]
