@@ -3,15 +3,13 @@ import Data.Ord (comparing)
 import Data.Char (digitToInt)
 import Data.List (sortBy, minimumBy, maximumBy)
 
--- Simplified Block type - now each block is just one position
 data Block = Block {
-    position :: Int,    -- Position in the disk map
-    value :: Int        -- The number stored at this position
+    position :: Int,    
+    value :: Int
 } deriving (Show, Eq)
 
 type DiskMap = [Block]
 
--- Simplified parser that treats each number as single position
 parseDiskMap :: String -> DiskMap
 parseDiskMap = go 0 0
   where
