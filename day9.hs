@@ -1,87 +1,130 @@
-import Data.Char (isDigit)
-import Data.List (sortBy)
+import TestUtils
 import Data.Ord (comparing)
+import Data.Char (digitToInt)
+import Data.List (sortBy, minimumBy, maximumBy)
 
-main :: IO ()
-main = do
-    diskmap <- readFile "day9.txt"
-    let positions = translateDiskmap diskmap
-    print "Task 1"
-    print $ calculateChecksum positions
+-- Simplified Block type - now each block is just one position
+data Block = Block {
+    position :: Int,    -- Position in the disk map
+    value :: Int        -- The number stored at this position
+} deriving (Show, Eq)
 
--- Each number position is (starting_index, position_number, count)
-type NumberPos = (Int, Int, Int)
--- Each space section is (starting_index, length)
-type SpacePos = (Int, Int)
+type DiskMap = [Block]
 
-translateDiskmap :: String -> ([NumberPos], [SpacePos])
-translateDiskmap input =
-    let pairs = zipWith (\idx digit -> (idx, read [digit] :: Int)) [0..] input
+-- Simplified parser that treats each number as single position
+parseDiskMap :: String -> DiskMap
+parseDiskMap = go 0 0
+  where
+    go _ _ [] = []
+    go blockId pos (f:s:rest) =
+        let fileLen = digitToInt f
+            spaceLen = digitToInt s
+            -- Create blocks with consecutive positions
+            fileBlocks = [Block {
+                position = pos + i,
+                value = blockId
+            } | i <- [0..fileLen-1]]
+            nextPos = pos + fileLen + spaceLen  -- Adjust next position
+        in fileBlocks ++ go (blockId + 1) nextPos rest
+    go blockId pos [f] =
+        let fileLen = digitToInt f
+        in [Block {
+            position = pos + i,
+            value = blockId
+        } | i <- [0..fileLen-1]]
 
-        -- Helper function to calculate starting indices
-        calculatePositions :: [(Int, Int)] -> ([NumberPos], [SpacePos])
-        calculatePositions [] = ([], [])
-        calculatePositions pairs =
-            let positions = scanl (\currentPos (idx, count) -> currentPos + count) 0 pairs
-                numbers = [(pos, idx `div` 2, count)
-                         | ((idx, count), pos) <- zip pairs positions
-                         , even idx]
-                spaces = [(pos, count)
-                        | ((idx, count), pos) <- zip pairs positions
-                        , odd idx]
-            in (numbers, spaces)
+-- Find spaces in the disk map
+findSpaces :: DiskMap -> [Int]
+findSpaces blocks =
+    let sortedBlocks = sortBy (comparing position) blocks
+        maxPos = if null blocks
+                then 0
+                else maximum (map position blocks)
+        occupied = map position sortedBlocks
+    in [pos | pos <- [0..maxPos], pos `notElem` occupied]
 
-    in calculatePositions pairs
+-- Move a block to a new position
+moveBlock :: Block -> Int -> DiskMap -> DiskMap
+moveBlock block newPos diskMap =
+    let oldPos = position block
+        -- Shift blocks between old and new positions
+        adjustBlock b
+            | b == block = block { position = newPos }
+            | position b > oldPos = b { position = position b - 1 }
+            | otherwise = b
+    in sortBy (comparing position) $ map adjustBlock diskMap
 
-calculateChecksum :: ([NumberPos], [SpacePos]) -> Integer
-calculateChecksum (numbers, _) =
-    sum [fromIntegral pos * fromIntegral idx | (idx, pos, _) <- numbers]
+-- Find the next block to move
+findNextMove :: DiskMap -> Maybe (Block, Int)
+findNextMove diskMap =
+    let spaces = findSpaces diskMap
+        movableBlocks = filter (canMoveLeft diskMap) diskMap
+    in case (spaces, movableBlocks) of
+        ([], _) -> Nothing
+        (_, []) -> Nothing
+        (_, blocks) ->
+            let rightmostBlock = maximumBy (comparing position) blocks
+                validSpaces = [pos | pos <- spaces, pos < position rightmostBlock]
+            in case validSpaces of
+                [] -> Nothing
+                xs -> Just (rightmostBlock, minimum xs)
 
-moveNumbers :: ([NumberPos], [SpacePos]) -> ([NumberPos], [SpacePos])
-moveNumbers (numbers, spaces) =
-    let
-        -- Sort numbers by index in descending order to process from right to left
-        sortedNumbers = sortBy (flip $ comparing (\(idx, _, _) -> idx)) numbers
-        
-        -- Helper function to check if a position range is available
-        isRangeAvailable :: Int -> Int -> [(Int, Int)] -> Bool
-        isRangeAvailable start count usedRanges =
-            not $ any (\(usedStart, usedEnd) -> 
-                      (start >= usedStart && start < usedEnd) ||
-                      (start + count > usedStart && start + count <= usedEnd) ||
-                      (start <= usedStart && start + count >= usedEnd)) usedRanges
+-- Check if a block can move left
+canMoveLeft :: DiskMap -> Block -> Bool
+canMoveLeft diskMap block =
+    let spaces = findSpaces diskMap
+    in any (< position block) spaces
 
-        -- Helper function to move a single number
-        moveNumber :: NumberPos -> [SpacePos] -> [(Int, Int)] -> (NumberPos, [(Int, Int)])
-        moveNumber num@(_, val, count) availableSpaces usedRanges =
-            let
-                -- Try each position from left to right until we find a valid spot
-                tryPositions = [(idx, idx + spaceLen) | (idx, spaceLen) <- sortBy (comparing fst) availableSpaces]
-                validPos = find (\(start, _) -> 
-                               isRangeAvailable start count usedRanges) tryPositions
-            in case validPos of
-                Just (start, _) -> ((start, val, count), (start, start + count) : usedRanges)
-                Nothing -> (num, usedRanges)  -- Keep original position if no valid spot found
+-- Make all possible moves
+moveNumbers :: DiskMap -> DiskMap
+moveNumbers diskMap = go diskMap
+  where
+    go currentMap = case findNextMove currentMap of
+        Nothing -> currentMap
+        Just (block, newPos) -> go (moveBlock block newPos currentMap)
 
-        -- Process all numbers in sequence
-        moveAllNumbers :: [NumberPos] -> [SpacePos] -> [(Int, Int)] -> [NumberPos]
-        moveAllNumbers [] _ _ = []
-        moveAllNumbers (num:nums) avSpaces usedRanges =
-            let (movedNum, newUsedRanges) = moveNumber num avSpaces usedRanges
-            in movedNum : moveAllNumbers nums avSpaces newUsedRanges
+-- Convert DiskMap to string representation
+diskMapToString :: DiskMap -> String
+diskMapToString blocks =
+    let maxPos = if null blocks
+                then 0
+                else maximum (map position blocks)
+        emptyString = replicate (maxPos + 1) '.'
+    in foldr (\block str -> 
+        let (before, _:after) = splitAt (position block) str
+        in before ++ show (value block) ++ after) emptyString blocks
 
-        -- Find first matching element
-        find :: (a -> Bool) -> [a] -> Maybe a
-        find _ [] = Nothing
-        find pred (x:xs) = if pred x then Just x else find pred xs
+-- Test cases for parsing
+diskMapParsing :: [TestCase String]
+diskMapParsing = [
+    TestCase {
+        testName = "12345",
+        expected = "0..111....22222",
+        actual = diskMapToString $ parseDiskMap "12345"
+    },
+    TestCase {
+        testName = "2333133121414131402",
+        expected = "00...111...2...333.44.5555.6666.777.888899",
+        actual = diskMapToString $ parseDiskMap "2333133121414131402"
+    }
+    ]
 
-    in (moveAllNumbers sortedNumbers spaces [], spaces)
-
--- Helper function to convert positions back to string
-positionsToString :: [NumberPos] -> Int -> String
-positionsToString numbers maxLen = 
-    let positions = [(idx, show val) | (idx, val, count) <- numbers, 
-                                     i <- replicate count val,
-                                     idx <- [idx..idx + count - 1]]
-        sortedPos = sortBy (comparing fst) positions
-    in concatMap snd sortedPos
+-- Test cases for reordering
+reordering :: [TestCase String]
+reordering = [
+    TestCase {
+        testName = "Simple reordering: 12345",
+        expected = "022111222",
+        actual = diskMapToString $ moveNumbers $ parseDiskMap "12345"
+    },
+    TestCase {
+        testName = "Complex reordering: 2333133121414131402",
+        expected = "0099811188827773336446555566",
+        actual = diskMapToString $ moveNumbers $ parseDiskMap "2333133121414131402"
+    },
+    TestCase {
+        testName = "Double Digits: 233313312141413140255",
+        expected = "00101010111101092988333844855557666677",
+        actual = diskMapToString $ moveNumbers $ parseDiskMap "233313312141413140255"
+    }
+    ]
