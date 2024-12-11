@@ -3,47 +3,68 @@ module Days.Day09 (main) where
 import Data.List (foldl')
 import Data.Either (lefts)
 import Util (readInputFileLines)
+import Data.Char (digitToInt)
+import Data.List (groupBy)
 
+data Gap = Gap 
+    { gapIdx :: Int
+    , gapLen :: Int
+    }
 
--- Translates input to a list of Left (value) and Right (empty)
--- "12345"
--- [
---   Left 0,                     -- from first number (1)
---   Right 0, Right 0,          -- from second number (2)
---   Left 1, Left 1, Left 1,    -- from third number (3)
---   Right 0, Right 0, Right 0, Right 0,  -- from fourth number (4)
---   Left 2, Left 2, Left 2, Left 2, Left 2  -- from fifth number (5)
--- ]
-generateSequence :: String -> [Either Int Int]
-generateSequence input = concat $ zipWith processChar [0..] input
+-- Convert input string into a list of elements where each even-indexed digit n 
+-- creates n copies of the current number, and each odd-indexed digit n creates n dots
+getData :: String -> [String]
+getData input = concat $ zipWith processChar [0..] input
   where
     processChar i c
-      | even i = replicate (read [c]) (Left (i `div` 2))
-      | otherwise = replicate (read [c]) (Right 0)
+      | even i    = replicate (digitToInt c) (show (i `div` 2))
+      | otherwise = replicate (digitToInt c) "."
 
-calculateSum :: [Either Int Int] -> Int
-calculateSum input =
-    let values = lefts input
-        ln = length values
+findGaps :: [String] -> [Gap]
+findGaps xs = 
+    let indexed = zip [0..] xs
+        isDot (_, x) = x == "."
+        toGap xs = Gap (fst $ head xs) (length xs)
+    in map toGap $ filter (isDot . head) $ groupBy (\a b -> isDot a && isDot b) indexed
 
-        processPosition :: (Int, [Int]) -> (Int, Either Int Int) -> (Int, [Int])
-        processPosition (sum, remaining) (pos, value)
-            | pos >= ln = (sum, remaining)
-            | otherwise = case value of
-                Right _ -> case remaining of 
-                    (x:xs) -> (sum + pos * x, xs)
-                    [] -> (sum, [])
-                Left v -> (sum + pos * v, remaining)
+findGroups :: [String] -> [(Int, Int, String)]
+findGroups xs = 
+    let indexed = zip [0..] xs
+        notDot (_, x) = x /= "."
+        toGroup g = (fst $ head g, length g, snd $ head g)
+    in reverse $ map toGroup $ filter (notDot . head) $ 
+       groupBy (\a b -> snd a == snd b && notDot a) indexed
 
-        initialState = (0, reverse values)
+tryMoveGroup :: [String] -> (Int, Int, String) -> [Gap] -> Maybe [String]
+tryMoveGroup xs (pos, groupLen, val) gaps =
+    case filter (\g -> gapIdx g < pos && gapLen g >= groupLen) gaps of
+        [] -> Nothing
+        (g:_) -> Just $ moveGroup xs pos groupLen val (gapIdx g)
 
-        (finalSum, _) = foldl' processPosition initialState (zip [0..] input)
-    in finalSum
+moveGroup :: [String] -> Int -> Int -> String -> Int -> [String]
+moveGroup xs start len val targetIdx =
+    let before = take targetIdx xs
+        middle = replicate len val
+        gapFill = replicate len "."
+        afterGap = drop (targetIdx + len) $ take start xs
+        after = drop (start + len) xs
+    in before ++ middle ++ afterGap ++ gapFill ++ after
 
-solve :: String -> Int
-solve input = calculateSum $ generateSequence input
+checksum :: [String] -> Int
+checksum xs = sum $ zipWith (*) [0..] (map getValue xs)
+  where
+    getValue "." = 0
+    getValue x = read x
 
-main :: IO ()
-main = do
-    input <- getLine
-    print $ solve input
+part2 :: String -> Int
+part2 input = checksum $ processGroups (getData input)
+  where
+    processGroups xs = processGroupsOnce xs (findGroups xs)
+    
+    processGroupsOnce :: [String] -> [(Int, Int, String)] -> [String]
+    processGroupsOnce current [] = current
+    processGroupsOnce current (group:remainingGroups) =
+        case tryMoveGroup current group (findGaps current) of
+            Nothing -> processGroupsOnce current remainingGroups
+            Just newState -> processGroupsOnce newState remainingGroups
+            
