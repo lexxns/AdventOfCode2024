@@ -1,9 +1,12 @@
+module Days.Day03 (main) where
+
 import Data.List (isPrefixOf)
 import Data.Maybe (mapMaybe)
+import Util (readInputFile)
 
 main :: IO ()
 main = do
-    code <- readFile "day3.txt"
+    code <- readInputFile "day3.txt"
     let p1pairs = countPart1 code
     let p1totals = multiplyTuples p1pairs
     let p1total = sum p1totals

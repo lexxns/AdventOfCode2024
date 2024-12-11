@@ -1,4 +1,6 @@
+module Days.Day04 (main) where
 
+import Util (readInputFile)
 import Grid
     ( gridDimensions,
       getAtLocation,
@@ -9,14 +11,14 @@ import Grid
 
 main :: IO ()
 main = do
-    wordsearch <- readFile "day4.txt"
+    wordsearch <- readInputFile "day4.txt"
     let grid = lines wordsearch
     let startLocations = getCharacterLocations grid 'X'
     let wordsFromLocations = [findWordsFromPositionPart1 grid "XMAS" x | x <- startLocations]
     let total = sum wordsFromLocations
-    print "Part 1 total:"
+    print "Part 1:"
     print total
-    print "Part 2 total:"
+    print "Part 2:"
     print $ length $ findDiagonalWords grid "MAS"
 
 getWord :: [String] -> (Int, Int) -> [(Int, Int)] -> String

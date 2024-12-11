@@ -1,13 +1,16 @@
+{-# LANGUAGE TupleSections #-}
+module Days.Day06 (main) where
+
 import Grid (Direction (UP), getDirectionalPositions, getCharacterLocations, getAtLocation, orthogonalDirections, Position, DirectedPosition, dirOffset, isValidPosition, getPositionsFromPath, visualizePath)
 import Data.List (find)
 import Debug.Trace (trace)
 import qualified Data.Set as Set
-import Util (dropLast)
+import Util (dropLast, readInputFile)
 import TestUtils
 
 main :: IO ()
 main = do
-    map <- readFile "day6.txt"
+    map <- readInputFile "day6.txt"
     let grid = lines map
     let guardLocation = head $ getCharacterLocations grid '^'
     let obstacleLocations = getCharacterLocations grid '#'

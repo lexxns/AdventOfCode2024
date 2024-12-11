@@ -1,0 +1,41 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           advent-of-code
+version:        0.1.0.0
+build-type:     Simple
+
+executable aoc-exe
+  main-is: Main.hs
+  other-modules:
+      Days
+      Grid
+      TestUtils
+      Util
+      Days.Day02
+      Days.Day03
+      Days.Day04
+      Days.Day05
+      Days.Day06
+      Days.Day07
+      Days.Day08
+      Days.Day09
+      Days.Day10
+      Days.Day11
+  hs-source-dirs:
+      app
+      src
+  ghc-options: -Wall -O2 -threaded -rtsopts -main-is Main
+  build-depends:
+      base
+    , containers
+    , deepseq
+    , directory
+    , filepath
+    , optparse-applicative
+    , parallel
+    , vector
+  default-language: Haskell2010

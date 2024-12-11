@@ -1,5 +1,8 @@
+module Days.Day07 (main) where
+
 import Data.List
 import TestUtils
+import Util (readInputFile)
 
 data CalibrationData = CalibrationData
     { calibration :: Integer
@@ -22,7 +25,7 @@ trim = dropWhile (==' ') . reverse . dropWhile (==' ') . reverse
 
 main :: IO ()
 main = do
-    content <- readFile "day7.txt"
+    content <- readInputFile "day7.txt"
     let cd = parseFile content
     let total = sumValidCalibrations cd
     print total

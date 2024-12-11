@@ -1,5 +1,8 @@
+module Days.Day05 (main) where
+
 import TestUtils
 import Data.List (partition)
+import Util (readInputFile)
 
 middle :: [a] -> a
 middle l@(_:_:_) = middle $ tail $ init l
@@ -49,12 +52,12 @@ parseUpdate line = map read $ words $ map (\c -> if c == ',' then ' ' else c) li
 
 readRulesFromFile :: FilePath -> IO [(Int, Int)]
 readRulesFromFile path = do
-    contents <- readFile path
+    contents <- readInputFile path
     return $ map parseRule $ lines contents
 
 readUpdatesFromFile :: FilePath -> IO [[Int]]
 readUpdatesFromFile path = do
-    contents <- readFile path
+    contents <- readInputFile path
     return $ map parseUpdate $ lines contents
 
 main :: IO ()

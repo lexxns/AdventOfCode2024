@@ -1,12 +1,14 @@
+module Days.Day08 (main) where
 import TestUtils
 import Grid
 import Data.List (nub, sort)
 import Debug.Trace
+import Util (readInputFile)
 
 
 main :: IO ()
 main = do
-    input <- readFile "day8.txt"
+    input <- readInputFile "day8.txt"
     let grid = lines input
     let ad = findAntenna grid
     let locations = map (\a -> let locs = findAntiNodeLocations a grid in trace ("Antenna " ++ [symbol a] ++ ": " ++ show (length locs)) locs) ad

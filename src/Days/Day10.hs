@@ -1,8 +1,11 @@
+module Days.Day10 (main) where
+
 import Grid
 import Data.Char (digitToInt)
 import Data.Maybe (catMaybes)
 import Debug.Trace (trace)
 import qualified Data.Set as Set
+import Util (readInputFile)
 
 data PathState = PathState {
     startPos :: Position,
@@ -37,7 +40,7 @@ getTrailEnds grid = getCharacterLocations grid '9'
 
 main :: IO ()
 main = do
-    mapContent <- readFile "day10.txt"
+    mapContent <- readInputFile "day10.txt"
     let grid = lines mapContent
         trailEnds = getTrailEnds grid
         pathStates = [canBeCompleted grid (PathState {  startPos = pos,  currentPath = [], completedPaths = Set.empty  })  (pos, 9) | pos <- trailEnds]

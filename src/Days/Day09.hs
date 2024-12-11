@@ -1,5 +1,8 @@
+module Days.Day09 (main) where
+
 import Data.List (foldl')
 import Data.Either (lefts)
+import Util (readInputFileLines)
 
 
 -- Translates input to a list of Left (value) and Right (empty)

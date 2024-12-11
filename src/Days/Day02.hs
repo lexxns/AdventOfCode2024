@@ -1,6 +1,6 @@
-module Main where
+module Days.Day02 (main) where
 
-import Data.List (tails)
+import Util (readInputFileLines)
 
 isValidDiff :: Int -> Int -> Bool
 isValidDiff x y = abs (y - x) <= 3
@@ -25,17 +25,22 @@ canBecomeValidByRemovingOne :: [Int] -> Bool
 canBecomeValidByRemovingOne xs =
     any (isValidMonotonic . (`removeAt` xs)) [0..length xs - 1]
 
-isSafeList :: [Int] -> Bool
-isSafeList xs = isValidMonotonic xs || canBecomeValidByRemovingOne xs
+isSafeListPart1 :: [Int] -> Bool
+isSafeListPart1 xs = isValidMonotonic xs
 
-readNumberFile :: FilePath -> IO [[Int]]
-readNumberFile path = do
-    contents <- readFile path
-    return $ map (map read . words) $ lines contents
+isSafeListPart2 :: [Int] -> Bool
+isSafeListPart2 xs = isValidMonotonic xs || canBecomeValidByRemovingOne xs
+
+readNumberFile :: [String] -> IO [[Int]]
+readNumberFile input = do
+    return $ map (map read . words) input
 
 main :: IO ()
 main = do
-    numbers <- readNumberFile "day2.txt"
-    let safeNumbers = filter isSafeList numbers
-    putStrLn "Safe lists:"
-    print $ length safeNumbers
+    numbers <- readNumberFile $ readInputFileLines "day2.txt"
+    let p1 = filter isSafeListPart1 numbers
+    putStrLn "Part 1:"
+    print $ length p1
+    let p2 = filter isSafeListPart2 numbers
+    putStrLn "Part 2:"
+    print $ length p2
