@@ -3,13 +3,11 @@ module Main where
 import Options.Applicative
 import qualified Days
 
--- Command line options
 data Options = Options
   { day :: Int
   , numCores :: Int
   }
 
--- Command line parser
 options :: Parser Options
 options = Options
   <$> option auto
@@ -24,7 +22,6 @@ options = Options
       <> value 1
       <> help "Number of cores to use" )
 
--- Main program
 main :: IO ()
 main = runDay =<< execParser opts
   where
