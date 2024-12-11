@@ -2,7 +2,7 @@ module Days.Day09 (main) where
 
 import Data.List (foldl')
 import Data.Either (lefts)
-import Util (readInputFileLines)
+import Util (readInputFile)
 import Data.Char (digitToInt)
 import Data.List (groupBy)
 
@@ -11,8 +11,6 @@ data Gap = Gap
     , gapLen :: Int
     }
 
--- Convert input string into a list of elements where each even-indexed digit n 
--- creates n copies of the current number, and each odd-indexed digit n creates n dots
 getData :: String -> [String]
 getData input = concat $ zipWith processChar [0..] input
   where
@@ -67,4 +65,8 @@ part2 input = checksum $ processGroups (getData input)
         case tryMoveGroup current group (findGaps current) of
             Nothing -> processGroupsOnce current remainingGroups
             Just newState -> processGroupsOnce newState remainingGroups
-            
+
+main :: IO ()
+main = do
+    input <- readInputFile "day9.txt"
+    print $ part2 input

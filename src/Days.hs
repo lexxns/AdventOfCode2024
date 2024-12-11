@@ -11,43 +11,24 @@ module Days
   , day11
   ) where
 
-import qualified Days.Day02
-import qualified Days.Day03
-import qualified Days.Day04
-import qualified Days.Day05
-import qualified Days.Day06
-import qualified Days.Day07
-import qualified Days.Day08
-import qualified Days.Day09
-import qualified Days.Day10
-import qualified Days.Day11
+import qualified Days.Day02 as Day02
+import qualified Days.Day03 as Day03
+import qualified Days.Day04 as Day04
+import qualified Days.Day05 as Day05
+import qualified Days.Day06 as Day06
+import qualified Days.Day07 as Day07
+import qualified Days.Day08 as Day08
+import qualified Days.Day09 as Day09
+import qualified Days.Day10 as Day10
+import qualified Days.Day11 as Day11
 
-day02 :: IO ()
-day02 = Days.Day02.main
-
-day03 :: IO ()
-day03 = Days.Day03.main
-
-day04 :: IO ()
-day04 = Days.Day04.main
-
-day05 :: IO ()
-day05 = Days.Day05.main
-
-day06 :: IO ()
-day06 = Days.Day06.main
-
-day07 :: IO ()
-day07 = Days.Day07.main
-
-day08 :: IO ()
-day08 = Days.Day08.main
-
-day09 :: IO ()
-day09 = Days.Day09.main
-
-day10 :: IO ()
-day10 = Days.Day10.main
-
-day11 :: IO ()
-day11 = Days.Day11.main
+day02 = Day02.main
+day03 = Day03.main
+day04 = Day04.main
+day05 = Day05.main
+day06 = Day06.main
+day07 = Day07.main
+day08 = Day08.main
+day09 = Day09.main
+day10 = Day10.main
+day11 = Day11.main

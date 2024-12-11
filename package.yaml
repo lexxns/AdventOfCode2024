@@ -9,6 +9,7 @@ dependencies:
   - optparse-applicative
   - filepath 
   - directory
+  - template-haskell
 
 ghc-options:
   - -Wall

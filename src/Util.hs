@@ -1,4 +1,3 @@
--- src/Util.hs
 module Util
     ( readInputFile
     , readInputFileLines
@@ -8,7 +7,6 @@ module Util
     ) where
 
 import System.FilePath ((</>), takeDirectory) 
-import System.FilePath ((</>))
 import System.Directory (getCurrentDirectory, doesFileExist)
 import Control.Exception (catch, SomeException)
 import System.IO.Unsafe (unsafePerformIO)
@@ -22,7 +20,7 @@ getResourcesPath = do
         let packageYaml = dir </> "package.yaml"
         hasPackageYaml <- doesFileExist packageYaml
         if hasPackageYaml
-            then return $ dir </> "src\\Resources"
+            then return $ dir </> "src" </> "Resources"  -- Use </> instead of hardcoded backslashes
             else do
                 let parentDir = takeDirectory dir
                 if parentDir == dir
