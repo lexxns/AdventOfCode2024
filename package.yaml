@@ -10,6 +10,7 @@ dependencies:
   - filepath 
   - directory
   - template-haskell
+  - mtl
 
 ghc-options:
   - -Wall
@@ -38,5 +39,6 @@ executables:
       - Days.Day09
       - Days.Day10
       - Days.Day11
+      - Days.Day12
     ghc-options:
       - -main-is Main

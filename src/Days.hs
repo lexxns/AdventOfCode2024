@@ -9,6 +9,7 @@ module Days
   , day09
   , day10
   , day11
+  , day12
   ) where
 
 import qualified Days.Day02 as Day02
@@ -21,6 +22,7 @@ import qualified Days.Day08 as Day08
 import qualified Days.Day09 as Day09
 import qualified Days.Day10 as Day10
 import qualified Days.Day11 as Day11
+import qualified Days.Day12 as Day12
 
 day02 = Day02.main
 day03 = Day03.main
@@ -32,3 +34,4 @@ day08 = Day08.main
 day09 = Day09.main
 day10 = Day10.main
 day11 = Day11.main
+day12 = Day12.main

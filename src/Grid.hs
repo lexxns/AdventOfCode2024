@@ -31,6 +31,9 @@ dirOffset UP_LEFT       = (-1,   -1)
 gridDimensions :: Grid -> Position
 gridDimensions grid = (length (head grid), length grid)
 
+gridPositions :: Int -> Int -> [Position]
+gridPositions width height = [(x, y) | y <- [0..height-1], x <- [0..width-1]]
+
 -- Get character at location
 getAtLocation :: Grid -> Position -> Char
 getAtLocation grid (x, y) = (grid !! y) !! x

@@ -25,6 +25,7 @@ executable aoc-exe
       Days.Day09
       Days.Day10
       Days.Day11
+      Days.Day12
   hs-source-dirs:
       app
       src
@@ -35,6 +36,7 @@ executable aoc-exe
     , deepseq
     , directory
     , filepath
+    , mtl
     , optparse-applicative
     , parallel
     , template-haskell
