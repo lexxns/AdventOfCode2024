@@ -1,19 +1,17 @@
 {-# LANGUAGE TupleSections #-}
 module Days.Day06 (main) where
 
-import Grid (Direction (UP), getDirectionalPositions, getCharacterLocations, getAtLocation, orthogonalDirections, Position, DirectedPosition, dirOffset, isValidPosition, getPositionsFromPath, visualizePath)
+import Grid (getDirectionalPositions, getCharacterLocations, getAtLocation, orthogonalDirections, Position, DirectedPosition, getPositionsFromPath)
 import Data.List (find)
-import Debug.Trace (trace)
 import qualified Data.Set as Set
-import Util (dropLast, readInputFile)
+import Util (readInputFile)
 import TestUtils
 
 main :: IO ()
 main = do
-    map <- readInputFile "day6.txt"
-    let grid = lines map
+    input <- readInputFile "day6.txt"
+    let grid = lines input
     let guardLocation = head $ getCharacterLocations grid '^'
-    let obstacleLocations = getCharacterLocations grid '#'
     let pathResult = followGuardPath grid guardLocation
     let positions = getPositionsFromPath $ path pathResult
     let uniqueLocations = Set.fromList positions :: Set.Set Position
@@ -22,9 +20,6 @@ main = do
     let possibleLoopPositions = findLoopPositions grid guardLocation $ path pathResult
     print "Part 2:"
     print $ length possibleLoopPositions
-
-obsLocation :: [String] -> [Position] -> Maybe Position
-obsLocation grid = find (\pos -> getAtLocation grid pos == '#')
 
 data PathResult = PathResult {
     path :: [DirectedPosition],

@@ -2,15 +2,40 @@
 -- Takes a list of strings and uses those as a grid
 module Grid where
 
-import Data.Maybe (catMaybes, fromMaybe)
+import Data.Maybe (catMaybes)
 import qualified Data.Set as Set
+import Debug.Trace (trace)
 
 data Direction = UP | UP_RIGHT | RIGHT | DOWN_RIGHT | DOWN | DOWN_LEFT | LEFT | UP_LEFT deriving (Eq,Ord,Enum,Show)
 
 type Grid = [String]
 type Position = (Int, Int)
 type Vector = (Int, Int)
+type Edge = (Position, Position)
 type DirectedPosition = (Position, Direction)
+type Region = Set.Set Position
+
+isInRegion :: Position -> Region -> Bool
+isInRegion = Set.member
+
+adjacent :: Position -> [Position]
+adjacent (x, y) = [(x, y+1), (x+1, y), (x, y-1), (x-1, y)]
+
+countSides :: Region -> Int
+countSides region = sum $ map (countSidesForPos region) (Set.toList region)
+
+countSidesForPos :: Region -> Position -> Int
+countSidesForPos region pos = 
+    let adjPositions = adjacent pos
+        nonMemberAdj = filter (not . (`Set.member` region)) adjPositions
+    in length nonMemberAdj
+
+getEdgeSegments :: Region -> Position -> [Edge]
+getEdgeSegments region (x, y) =
+    let neighbors = [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]
+        -- Only create border segments where there's a transition from region to non-region
+        isExternalNeighbor pos = not (Set.member pos region)
+    in [((x, y), neighbor) | neighbor <- neighbors, isExternalNeighbor neighbor]
 
 orthogonalDirections :: [Direction]
 orthogonalDirections =  [UP, RIGHT, DOWN, LEFT]
@@ -39,13 +64,13 @@ getAtLocation :: Grid -> Position -> Char
 getAtLocation grid (x, y) = (grid !! y) !! x
 
 setAtLocation :: Grid -> Position -> Char -> Grid
-setAtLocation grid (x, y) ch = 
+setAtLocation grid (x, y) ch =
     let row = grid !! y
         newRow = take x row ++ [ch] ++ drop (x + 1) row
     in take y grid ++ [newRow] ++ drop (y + 1) grid
 
 setAtLocations :: Grid -> [Position] -> Char -> Grid
-setAtLocations grid positions ch = 
+setAtLocations grid positions ch =
     foldl (\g pos -> setAtLocation g pos ch) grid positions
 
 isValidPosition :: Grid -> Position -> Bool
@@ -66,16 +91,22 @@ getDirectionSequenceUntilBoundary grid (x, y) (dx, dy) =
 
 getAdjacentPositions :: Grid -> Position -> Int -> [[Position]]
 getAdjacentPositions grid pos count =
-    getOrthogonalPositions grid pos count ++ getDiagonalPositions grid pos count
+    getOrthogonalPositionsWithCount grid pos count ++ getDiagonalPositionsWithCount grid pos count
 
-getOrthogonalPositions :: Grid -> Position -> Int -> [[Position]]
-getOrthogonalPositions grid (x, y) count =
+getOrthogonalPositions :: Grid -> Position -> [[Position]]
+getOrthogonalPositions grid (x, y) = getOrthogonalPositionsWithCount grid (x, y) 1
+
+getOrthogonalPositionsWithCount :: Grid -> Position -> Int -> [[Position]]
+getOrthogonalPositionsWithCount grid (x, y) count =
     let offsets = map dirOffset orthogonalDirections
         sequences = map (\offset -> getDirectionSequence grid (x, y) offset count) offsets
     in catMaybes sequences
 
-getDiagonalPositions :: Grid -> Position -> Int -> [[Position]]
-getDiagonalPositions grid (x, y) count =
+getDiagonalPositions :: Grid -> Position -> [[Position]]
+getDiagonalPositions grid (x, y) = getDiagonalPositionsWithCount grid (x, y) 1
+
+getDiagonalPositionsWithCount :: Grid -> Position -> Int -> [[Position]]
+getDiagonalPositionsWithCount grid (x, y) count =
     let offsets = map dirOffset diagonalDirections
         sequences = map (\offset -> getDirectionSequence grid (x, y) offset count) offsets
     in catMaybes sequences
@@ -115,6 +146,9 @@ getPathBetween    (x1, y1) (x2, y2) =
 
 getPositionsFromPath :: [DirectedPosition] -> [Position]
 getPositionsFromPath = map fst
+
+isContainedWithin :: Region -> Region -> Bool
+isContainedWithin = Set.isSubsetOf
 
 visualizePath :: Grid -> [Position] -> IO ()
 visualizePath grid positions = do

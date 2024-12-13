@@ -26,15 +26,6 @@ findAntenna mp =
         locs = map (getCharacterLocations mp) chars
     in [AntennaData c l | (c, l) <- zip chars locs, not (null l)]
 
-findAntiNode :: [Position] -> [Position]
-findAntiNode positions = concatMap generateAntiNodes allPairs
-  where
-    allPairs = [(p1, p2) | p1 <- positions, p2 <- positions, p1 < p2]
-    generateAntiNodes (p1, p2) = [
-      addVectorToPoint p2 (getVectorBetween p1 p2),
-      addVectorToPoint p1 (getVectorBetween p2 p1)
-      ]
-
 generateAntiNodes :: Grid -> (Position, Position) -> [Position]
 generateAntiNodes grid (p1, p2) = 
     let vector = getVectorBetween p1 p2

@@ -9,7 +9,7 @@ canBeCompleted grid (pos, target)
   | target < 0 = 0
   | otherwise = trace ("Checking " ++ show pos ++ " target=" ++ show target) $ sum steps
   where
-    adjacent = concat $ getOrthogonalPositions grid pos 1
+    adjacent = concat $ getOrthogonalPositions grid pos
     steps = [canBeCompleted grid (adjPos, target - 1) |
              adjPos <- adjacent,
              let val = digitToInt (getAtLocation grid adjPos),

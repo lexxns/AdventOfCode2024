@@ -26,7 +26,7 @@ canBecomeValidByRemovingOne xs =
     any (isValidMonotonic . (`removeAt` xs)) [0..length xs - 1]
 
 isSafeListPart1 :: [Int] -> Bool
-isSafeListPart1 xs = isValidMonotonic xs
+isSafeListPart1 = isValidMonotonic
 
 isSafeListPart2 :: [Int] -> Bool
 isSafeListPart2 xs = isValidMonotonic xs || canBecomeValidByRemovingOne xs

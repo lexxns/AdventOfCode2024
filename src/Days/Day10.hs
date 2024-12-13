@@ -2,7 +2,6 @@ module Days.Day10 (main) where
 
 import Grid
 import Data.Char (digitToInt)
-import Data.Maybe (catMaybes)
 import Debug.Trace (trace)
 import qualified Data.Set as Set
 import Util (readInputFile)
@@ -23,7 +22,7 @@ canBeCompleted grid state (pos, target)
   | otherwise = trace ("Checking " ++ show pos ++ " target=" ++ show target) $
       foldr combinePaths state { currentPath = pos : currentPath state } steps
   where
-    adjacent = concat $ getOrthogonalPositions grid pos 1
+    adjacent = concat $ getOrthogonalPositions grid pos
     steps = [canBeCompleted grid state (adjPos, target - 1) |
              adjPos <- adjacent,
              let val = digitToInt (getAtLocation grid adjPos),

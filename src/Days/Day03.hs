@@ -1,7 +1,6 @@
 module Days.Day03 (main) where
 
 import Data.List (isPrefixOf)
-import Data.Maybe (mapMaybe)
 import Util (readInputFile)
 
 main :: IO ()
@@ -47,7 +46,7 @@ extractNumbers str = do
 
 countPart1 :: String -> [(Int, Int)]
 countPart1 "" = []
-countPart1 input@(c:cs)
+countPart1 input@(_:cs)
     | length input < 4 = []
     | "mul(" `isPrefixOf` input = 
         case extractNumbers (drop 4 input) of
@@ -57,7 +56,7 @@ countPart1 input@(c:cs)
 
 countPart2 :: Bool -> String -> [(Int, Int)]
 countPart2 _ "" = []
-countPart2 state input@(c:cs)
+countPart2 state input@(_:cs)
     | length input < 4 = []
     | "do()" `isPrefixOf` input = 
         countPart2 True (drop 4 input)

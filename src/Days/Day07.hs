@@ -1,6 +1,5 @@
 module Days.Day07 (main) where
 
-import Data.List
 import TestUtils
 import Util (readInputFile)
 

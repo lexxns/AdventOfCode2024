@@ -2,8 +2,7 @@ module Days.Day04 (main) where
 
 import Util (readInputFile)
 import Grid
-    ( gridDimensions,
-      getAtLocation,
+    ( getAtLocation,
       isValidPosition,
       getAdjacentPositions,
       getCenterPositions,
