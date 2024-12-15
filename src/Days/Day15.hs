@@ -50,20 +50,27 @@ makeMove grid dir =
                 '.' -> replaceAtLocation
                     (replaceAtLocation grid newPos '@')
                     startPos '.'
-                'O' -> case canPushBoxes grid dir newPos of
+                b | b `elem` ['O', '[', ']'] -> case canPushBoxes grid dir newPos of
                     Nothing -> grid  -- Can't push the boxes
                     Just endPos -> pushBoxes grid dir startPos newPos endPos
                 _ -> grid
 
--- Find how many boxes we can push and where they end
 canPushBoxes :: Grid -> Direction -> Position -> Maybe Position
-canPushBoxes grid dir pos =
-    let nextPos = positionInDirection pos dir 1
+canPushBoxes grid dir (x, y) =
+    let nextPos = positionInDirection (x, y) dir 1
         char = getAtLocation grid nextPos
     in case char of
-        '.' -> Just pos      -- Found empty space to push into
-        'O' -> canPushBoxes grid dir nextPos  -- Keep checking the chain
-        _   -> Nothing       -- Hit a wall or other obstacle
+        '.' -> Just (x, y)
+        'O' -> canPushBoxes grid dir nextPos
+        '[' -> canPushBoxes grid dir nextPos >>= \_ ->
+               let (nextX, nextY) = nextPos in
+               canPushBoxes grid dir (nextX + 1, nextY) >>= \_ ->
+               Just (x, y)
+        ']' -> canPushBoxes grid dir nextPos >>= \_ ->
+               let (nextX, nextY) = nextPos in
+               canPushBoxes grid dir (nextX - 1, nextY) >>= \_ ->
+               Just (x, y)
+        _   -> Nothing
 
 -- Get all positions containing boxes from start to end (inclusive)
 getBoxPositions :: Position -> Position -> Direction -> [Position]
@@ -73,28 +80,16 @@ getBoxPositions start end dir =
 
 pushBoxes :: Grid -> Direction -> Position -> Position -> Position -> Grid
 pushBoxes grid dir playerPos firstBoxPos endPos =
-    -- Get all positions that have boxes (from first to last)
     let boxPositions = getBoxPositions firstBoxPos endPos dir
-        -- First move all boxes forward, starting from the last box
-        gridWithBoxesMoved = foldl (\g pos ->
-            let newPos = positionInDirection pos dir 1
-            in replaceAtLocation
-                (replaceAtLocation g newPos 'O')
-                pos '.') grid (reverse boxPositions)
-        -- Then place player in the first box's old position
-        finalGrid = replaceAtLocation
-            (replaceAtLocation gridWithBoxesMoved firstBoxPos '@')
+        gridWithBoxesMoved = foldl moveBox grid (reverse boxPositions)
+        finalGrid = replaceAtLocation 
+            (replaceAtLocation gridWithBoxesMoved firstBoxPos '@') 
             playerPos '.'
     in finalGrid
-
-moveBoxes :: Grid -> [Position] -> Direction -> Grid
-moveBoxes grid [] _ = grid
-moveBoxes grid (pos:rest) dir =
-    let newPos = positionInDirection pos dir 1
-        newGrid = replaceAtLocation
-            (replaceAtLocation grid newPos 'O')
-            pos '.'
-    in moveBoxes newGrid rest dir
+    where
+        moveBox g pos = 
+            let newPos = positionInDirection pos dir 1
+            in replaceAtLocation (replaceAtLocation g newPos 'O') pos '.'
 
 replaceAtLocation :: Grid -> Position -> Char -> Grid
 replaceAtLocation grid (x, y) newChar =
@@ -224,6 +219,38 @@ day15Grid = [
     "##################################################"
     ]
 
+p2Start = [
+    "##############",
+    "##......##..##",
+    "##..........##",
+    "##....[][]@.##",
+    "##....[]....##",
+    "##..........##",
+    "##############"
+    ]
+
+p2Expected = [
+    "##############",
+    "##...[].##..##",
+    "##...@.[]...##",
+    "##....[]....##",
+    "##..........##",
+    "##..........##",
+    "##############"
+    ]
+
+p2Input = "<vv<<^^<<^^"
+
+
+movementTests' :: [TestCase Grid]
+movementTests' = [
+    TestCase {
+        testName = "3",
+        expected = p2Expected,
+        actual = testHelper p2Start p2Input
+    }
+    ]
+
 boxScore (x, y) = fromIntegral (y * 100 + x)
 
 sumBoxes' grd = 
@@ -235,3 +262,31 @@ sumBoxes' grd =
              "\nX total: " ++ show xs ++ 
              "\nFinal: " ++ show final) $ 
        sum $ map boxScore boxLocations
+
+
+-- let newPos = positionInDirection startPos dir 1
+--                 targetChar = getAtLocation grid newPos
+--             in case targetChar of
+--                 '.' -> replaceAtLocation
+--                     (replaceAtLocation grid newPos '@')
+--                     startPos '.'
+--                 b | b `elem` ['O', '[', ']'] -> case canPushBoxes grid dir newPos of
+--                     Nothing -> grid  -- Can't push the boxes
+--                     Just endPos -> pushBoxes grid dir startPos newPos endPos
+--                 _ -> grid
+testHelper' grid start dir = do
+    let newPos = positionInDirection start dir 1
+    canPushBoxes grid dir newPos
+
+movementTests'' :: [TestCase (Maybe (Int, Int))]
+movementTests'' = [
+    TestCase {
+        testName = "Single empty space",
+        expected = Just (1,1),
+        actual = testHelper' [
+            "#########",
+            "##.@[].##",
+            "#########"
+        ] (3, 1) RIGHT
+    }
+    ]

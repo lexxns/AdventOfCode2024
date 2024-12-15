@@ -144,6 +144,13 @@ getVectorBetween    (x1, y1) (x2, y2) = (x2 - x1, y2 - y1)
 addVectorToPoint :: Position -> Vector -> Position
 addVectorToPoint    (x1, y1) (d1, d2) = (x1 + d1, y1 + d2)
 
+addVectorToPointWrapped :: Grid -> Position -> Vector -> Position
+addVectorToPointWrapped grid (x, y) (dx, dy) =
+    let (width, height) = gridDimensions grid
+        newX = (x + dx) `mod` width
+        newY = (y + dy) `mod` height
+    in (newX, newY)
+
 getPathBetween :: Position -> Position -> [Position]
 getPathBetween    (x1, y1) (x2, y2) =
    let dx = signum (x2 - x1)
