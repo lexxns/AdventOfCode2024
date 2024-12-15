@@ -45,4 +45,6 @@ runDay (Options d cores) =
     11 -> Days.day11
     12 -> Days.day12
     13 -> Days.day13
+    14 -> Days.day14
+    15 -> Days.day15
     _  -> putStrLn $ "Day " ++ show d ++ " not implemented yet"

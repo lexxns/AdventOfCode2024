@@ -41,9 +41,6 @@ data Entry = Entry
     , prize :: Position
     } deriving (Show, Eq)
 
--- Parse a single position like "X+79, Y+87"
--- Parse a prize line like "Prize: X=7384, Y=4824"
--- Parse a button position like "X+79, Y+87"
 buttonPosition :: Parser Position
 buttonPosition = do
     void $ char 'X'
@@ -55,7 +52,6 @@ buttonPosition = do
     y <- L.decimal
     return (x, y)
 
--- Parse a prize position like "X=7384, Y=4824"
 prizePosition :: Parser Position
 prizePosition = do
     void $ char 'X'
@@ -67,20 +63,17 @@ prizePosition = do
     y <- L.decimal
     return (x + conversion, y + conversion)
 
--- Parse a line like "Button A: X+79, Y+87"
 buttonLine :: T.Text -> Parser Position
 buttonLine name = do
     void $ string name
     void $ string ": "
     buttonPosition
 
--- Parse a prize line like "Prize: X=7384, Y=4824"
 prizeLine :: Parser Position
 prizeLine = do
     void $ string "Prize: "
     prizePosition
 
--- Parse a single entry (3 lines)
 parseEntry :: Parser Entry
 parseEntry = do
     bA <- buttonLine "Button A"
@@ -89,7 +82,6 @@ parseEntry = do
     void newline
     Entry bA bB <$> prizeLine
 
--- Parse multiple entries separated by blank lines
 entries :: Parser [Entry]
 entries = parseEntry `sepBy` count 2 newline
 
@@ -141,6 +133,26 @@ findMinCost entry =
         maxSteps = manhattan (0, 0) (prize entry)
         manhattan (x1, y1) (x2, y2) = abs (x2 - x1) + abs (y2 - y1)
 
+
+findMinCostPart2 :: Entry -> Integer
+findMinCostPart2 Entry{buttonA=(ax,ay), buttonB=(bx,by), prize=(tx,ty)} = 
+    if isValidSolution then round (3 * countA + countB) else 0
+    where
+        dax = fromIntegral ax :: Double
+        day = fromIntegral ay :: Double
+        dbx = fromIntegral bx :: Double
+        dby = fromIntegral by :: Double
+        dtx = fromIntegral tx :: Double
+        dty = fromIntegral ty :: Double
+        
+        countA = (dtx * dby - dty * dbx) / (dax * dby - day * dbx)
+        countB = (dtx - dax * countA) / dbx
+        
+        isValidSolution = 
+            countA >= 0 && countB >= 0 &&
+            abs (countA - fromIntegral (round countA)) < 1e-10 && 
+            abs (countB - fromIntegral (round countB)) < 1e-10
+
 main :: IO ()
 main = do
     path <- getInputPath "day13.txt"
@@ -148,8 +160,13 @@ main = do
     case result of
         Left err -> putStrLn $ "Parse error: " ++ errorBundlePretty err
         Right es -> do
-            let costs = map findMinCost es
-            print costs
+            -- let p1 = map findMinCost es
+            -- print "Part 1:"
+            -- print $ sum p1
+            let p2 = map findMinCostPart2 es
+            print "Part 2:"
+            print $ sum p2
+            
 
 example :: Entry
 example = Entry (94, 34) (22, 67) (8400, 5400)

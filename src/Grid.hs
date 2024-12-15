@@ -2,9 +2,8 @@
 -- Takes a list of strings and uses those as a grid
 module Grid where
 
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, listToMaybe)
 import qualified Data.Set as Set
-import Debug.Trace (trace)
 
 data Direction = UP | UP_RIGHT | RIGHT | DOWN_RIGHT | DOWN | DOWN_LEFT | LEFT | UP_LEFT deriving (Eq,Ord,Enum,Show)
 
@@ -52,6 +51,11 @@ dirOffset DOWN          = (0,     1)
 dirOffset DOWN_LEFT     = (-1,    1)
 dirOffset LEFT          = (-1,    0)
 dirOffset UP_LEFT       = (-1,   -1)
+
+positionInDirection :: Position -> Direction -> Int -> Position
+positionInDirection (x, y) dir count = 
+    let (offsetX, offsetY) = dirOffset dir
+    in (x + offsetX * count, y + offsetY * count)
 
 gridDimensions :: Grid -> Position
 gridDimensions grid = (length (head grid), length grid)
@@ -122,10 +126,13 @@ getCenterPositions grid =
 
 getCharacterLocations :: Grid -> Char -> [Position]
 getCharacterLocations grid targetChar =
-    [(x, y) | y <- [0..height-1],
-              x <- [0..width-1],
+    [(x, y) | x <- [0..width-1],
+              y <- [0..height-1],
               (grid !! y) !! x == targetChar]
     where (width, height) = gridDimensions grid
+
+getCharacterLocation :: Grid -> Char -> Maybe Position
+getCharacterLocation grid char = listToMaybe (getCharacterLocations grid char)
 
 -- Manhattan distance (movement only up/down/left/right)
 getManhattanDistance :: Position -> Position -> Int
