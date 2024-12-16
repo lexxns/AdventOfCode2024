@@ -14,6 +14,14 @@ module Days
   , day14
   , day15
   , day16
+  , day17
+  , day18
+  , day19
+  , day20
+  , day21
+  , day22
+  , day23
+  , day24
   ) where
 
 import qualified Days.Day02 as Day02
@@ -31,6 +39,14 @@ import qualified Days.Day13 as Day13
 import qualified Days.Day14 as Day14
 import qualified Days.Day15 as Day15
 import qualified Days.Day16 as Day16
+import qualified Days.Day17 as Day17
+import qualified Days.Day18 as Day18
+import qualified Days.Day19 as Day19
+import qualified Days.Day20 as Day20
+import qualified Days.Day21 as Day21
+import qualified Days.Day22 as Day22
+import qualified Days.Day23 as Day23
+import qualified Days.Day24 as Day24
 
 day02 :: IO ()
 day02 = Day02.main
@@ -62,3 +78,19 @@ day15 :: IO ()
 day15 = Day15.main
 day16 :: IO ()
 day16 = Day16.main
+day17 :: IO ()
+day17 = Day17.main
+day18 :: IO ()
+day18 = Day18.main
+day19 :: IO ()
+day19 = Day19.main
+day20 :: IO ()
+day20 = Day20.main
+day21 :: IO ()
+day21 = Day21.main
+day22 :: IO ()
+day22 = Day22.main
+day23 :: IO ()
+day23 = Day23.main
+day24 :: IO ()
+day24 = Day24.main
