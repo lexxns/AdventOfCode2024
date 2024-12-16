@@ -4,9 +4,6 @@ import TestUtils
 import Grid
 import Debug.Trace (trace)
 import Util (readInputFile)
-import qualified Data.Set as Set
-import Numeric (showHex)
-
 
 runTestCase :: Grid -> String -> Grid
 runTestCase grd input =

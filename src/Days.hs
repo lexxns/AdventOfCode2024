@@ -13,6 +13,7 @@ module Days
   , day13
   , day14
   , day15
+  , day16
   ) where
 
 import qualified Days.Day02 as Day02
@@ -29,6 +30,7 @@ import qualified Days.Day12 as Day12
 import qualified Days.Day13 as Day13
 import qualified Days.Day14 as Day14
 import qualified Days.Day15 as Day15
+import qualified Days.Day16 as Day16
 
 day02 :: IO ()
 day02 = Day02.main
@@ -58,3 +60,5 @@ day14 :: IO ()
 day14 = Day14.main
 day15 :: IO ()
 day15 = Day15.main
+day16 :: IO ()
+day16 = Day16.main

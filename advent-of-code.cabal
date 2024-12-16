@@ -29,12 +29,14 @@ executable aoc-exe
       Days.Day13
       Days.Day14
       Days.Day15
+      Days.Day16
   hs-source-dirs:
       app
       src
   ghc-options: -Wall -O2 -threaded -rtsopts -main-is Main
   build-depends:
-      base
+      array
+    , base
     , containers
     , deepseq
     , directory
