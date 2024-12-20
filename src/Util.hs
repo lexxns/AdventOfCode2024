@@ -4,6 +4,7 @@ module Util
     , getInputPath
     , dropLast
     , numDigits
+    , lenCompare
     ) where
 
 import System.FilePath ((</>), takeDirectory) 
@@ -20,7 +21,7 @@ getResourcesPath = do
         let packageYaml = dir </> "package.yaml"
         hasPackageYaml <- doesFileExist packageYaml
         if hasPackageYaml
-            then return $ dir </> "src" </> "Resources"  -- Use </> instead of hardcoded backslashes
+            then return $ dir </> "src" </> "Resources"
             else do
                 let parentDir = takeDirectory dir
                 if parentDir == dir
@@ -54,3 +55,6 @@ numDigits :: Int -> Int
 numDigits n | n < 0 = numDigits (-n)
             | n < 10 = 1
             | otherwise = 1 + numDigits (n `div` 10)
+
+lenCompare :: (Foldable t1, Foldable t2) => t1 a1 -> t2 a2 -> Ordering
+lenCompare a b = compare (length a) (length b)
