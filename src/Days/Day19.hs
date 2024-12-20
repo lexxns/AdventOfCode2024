@@ -9,8 +9,8 @@ import qualified Data.Map.Strict as Map
 
 type Cache = Map.Map Text Integer
 
-solveMemo :: Text -> [Text] -> Cache -> (Integer, Cache)
-solveMemo str patterns cache
+solve :: Text -> [Text] -> Cache -> (Integer, Cache)
+solve str patterns cache
     | T.null str = (1, cache)
     | T.length str > 0 && null patterns = (0, cache)
     | otherwise = case Map.lookup str cache of
@@ -22,7 +22,7 @@ solveMemo str patterns cache
   where
     processPattern (acc, c) pat
         | pat `T.isPrefixOf` str =
-            let (subResult, newCache) = solveMemo (T.drop (T.length pat) str) patterns c
+            let (subResult, newCache) = solve (T.drop (T.length pat) str) patterns c
             in (acc + subResult, newCache)
         | otherwise = (acc, c)
 
@@ -36,7 +36,7 @@ solvable str patterns
         (pat `T.isPrefixOf` str) && solvable (T.drop (T.length pat) str) patterns
 
 countSolutions :: Text -> [Text] -> Integer
-countSolutions str patterns = fst $ solveMemo str patterns Map.empty
+countSolutions str patterns = fst $ solve str patterns Map.empty
 
 preprocessPatterns :: [Text] -> [Text]
 preprocessPatterns = sortBy (comparing (Down . T.length))
