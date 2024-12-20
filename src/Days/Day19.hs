@@ -7,16 +7,14 @@ import qualified Data.Text as T
 import Data.Ord (comparing, Down(Down))
 import qualified Data.Map.Strict as Map
 
--- Cache type for memoization
 type Cache = Map.Map Text Integer
 
--- Main solver function with memoization
 solveMemo :: Text -> [Text] -> Cache -> (Integer, Cache)
 solveMemo str patterns cache
-    | T.null str = (1, cache)  -- Base case: empty string means we found a solution
-    | T.length str > 0 && null patterns = (0, cache)  -- No patterns left but string remains
+    | T.null str = (1, cache)
+    | T.length str > 0 && null patterns = (0, cache)
     | otherwise = case Map.lookup str cache of
-        Just result -> (result, cache)  -- Return cached result if available
+        Just result -> (result, cache)
         Nothing -> 
             let (result, newCache) = foldl processPattern (0, cache) patterns
                 finalCache = Map.insert str result newCache
@@ -28,7 +26,6 @@ solveMemo str patterns cache
             in (acc + subResult, newCache)
         | otherwise = (acc, c)
 
--- Function to check if a solution exists (optimized)
 solvable :: Text -> [Text] -> Bool
 solvable str patterns
     | T.null str = True
@@ -38,11 +35,9 @@ solvable str patterns
     matchAndContinue pat =
         (pat `T.isPrefixOf` str) && solvable (T.drop (T.length pat) str) patterns
 
--- Count total solutions using memoization
 countSolutions :: Text -> [Text] -> Integer
 countSolutions str patterns = fst $ solveMemo str patterns Map.empty
 
--- Preprocess patterns for better performance
 preprocessPatterns :: [Text] -> [Text]
 preprocessPatterns = sortBy (comparing (Down . T.length))
 
@@ -55,11 +50,9 @@ main = do
         strs = map (T.filter (/= '\r') . pack) (lines inputs)
         sortedPatterns = preprocessPatterns towels
         
-        -- Part 1: Check solvability
         part1Results = map (`solvable` sortedPatterns) strs
         part1Total = length $ filter id part1Results
         
-        -- Part 2: Count solutions
         part2Results = map (`countSolutions` sortedPatterns) strs
         part2Total = sum part2Results
     
