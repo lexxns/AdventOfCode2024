@@ -31,6 +31,7 @@ executables:
     other-modules:
       - Days
       - Grid
+      - Graph
       - TestUtils
       - Util
       - Days.Day02
