@@ -5,6 +5,8 @@ module Util
     , dropLast
     , numDigits
     , lenCompare
+    , allEnumValues
+    , allListPairs
     ) where
 
 import System.FilePath ((</>), takeDirectory) 
@@ -58,3 +60,9 @@ numDigits n | n < 0 = numDigits (-n)
 
 lenCompare :: (Foldable t1, Foldable t2) => t1 a1 -> t2 a2 -> Ordering
 lenCompare a b = compare (length a) (length b)
+
+allEnumValues :: (Bounded a, Enum a) => [a]
+allEnumValues = [minBound..maxBound]
+
+allListPairs :: Eq a => [a] -> [(a, a)]
+allListPairs xs = [(x, y) | x <- xs, y <- xs, x /= y]
